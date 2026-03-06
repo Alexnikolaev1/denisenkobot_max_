@@ -1,0 +1,19 @@
+{
+  "name": "denisenko-bot",
+  "version": "2.0.0",
+  "description": "Production-ready Telegram-бот для фотостудии Татьяны Денисенко",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node local.js",
+    "dev": "node local.js",
+    "set-webhook": "node scripts/set-webhook.js",
+    "check": "node -e \"process.env.BOT_TOKEN = process.env.BOT_TOKEN || 'test_token'; require('./src/bot'); console.log('bot modules: ok')\""
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
