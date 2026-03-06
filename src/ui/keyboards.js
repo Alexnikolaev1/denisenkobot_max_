@@ -44,14 +44,15 @@ const keyboards = {
   ]),
 
   contactsInlineLinks: Markup.inlineKeyboard([
-    [Markup.button.url('💬 Написать в Telegram', 'https://t.me/Anton_Denisenko')],
+    [Markup.button.url('💬 Написать в Telegram', 'https://t.me/tataprophoto')],
     [Markup.button.url('🌐 Открыть сайт', 'https://denisenko.info/')],
   ]),
 
   resourcesInlineLinks: Markup.inlineKeyboard([
     [Markup.button.url('🌐 denisenko.info', 'https://denisenko.info/')],
     [Markup.button.url('📱 Telegram-канал', 'https://t.me/mosalbum')],
-    [Markup.button.url('✝️ VK «Одесную»', 'https://vk.com/odesnuyu_ru')],
+    [Markup.button.url('📱 MAX-канал Mosalbum', 'https://max.ru/join/zUPzdbO-Se9dSMt7oZRJOyjoUvYTNvXQXsT6yWyMf1Y')],
+    [Markup.button.url('💬 VK - Моя страница', 'https://vk.com/denisenko.tatyana')],
   ]),
 };
 
