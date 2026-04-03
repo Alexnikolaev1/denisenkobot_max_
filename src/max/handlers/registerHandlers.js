@@ -1,5 +1,9 @@
 const { REGIONS, keyboards } = require('../ui/keyboards');
 const { MESSAGES } = require('../../content/messages');
+const {
+  getStartPhotoAttachment,
+  isValidImageAttachmentJson,
+} = require('../utils/sendImages');
 
 function escapeHtml(text) {
   return String(text)
@@ -18,21 +22,40 @@ async function handleStart(ctx) {
   ctx.session.region = undefined;
   ctx.session.regionName = undefined;
 
-  await sendHtml(ctx, MESSAGES.start(getUserName(ctx)), { attachments: [keyboards.startInlineMenu] });
+  const attachments = [keyboards.startInlineMenu];
+  try {
+    const photo = await getStartPhotoAttachment(ctx);
+    if (photo && isValidImageAttachmentJson(photo)) {
+      attachments.unshift(photo);
+    }
+  } catch (e) {
+    console.error('[start-photo]', e);
+  }
+
+  await sendHtml(ctx, MESSAGES.start(getUserName(ctx)), { attachments });
 }
 
 function requireRegion(ctx, next) {
   if (!ctx.session?.region) {
-    return ctx.reply(MESSAGES.regionRequired, { format: 'html' });
+    return sendHtml(ctx, MESSAGES.regionRequired);
   }
   return next();
 }
 
+/**
+ * У message_callback в MAX иногда нет chat_id — ctx.reply() падает.
+ * Тогда шлём в личку по user_id.
+ */
 async function sendHtml(ctx, html, extra = {}) {
-  return ctx.reply(html, {
-    format: 'html',
-    ...extra,
-  });
+  const opts = { format: 'html', ...extra };
+  if (typeof ctx.chatId === 'number') {
+    return ctx.reply(html, opts);
+  }
+  const uid = ctx.user?.user_id;
+  if (typeof uid === 'number') {
+    return ctx.api.sendMessageToUser(uid, html, opts);
+  }
+  throw new Error('sendHtml: нет chatId и user_id');
 }
 
 async function handleRegion(ctx, region) {

@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
       status: 'ok',
       service: 'denisenko-bot',
       build: process.env.VERCEL_GIT_COMMIT_SHA || 'local',
-      handler: 'lazy-bot-max-text-only',
+      handler: 'callback-chat-or-user-fallback',
     });
     return;
   }
