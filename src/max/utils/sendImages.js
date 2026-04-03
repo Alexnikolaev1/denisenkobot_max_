@@ -51,7 +51,9 @@ function buildImageJsonFromInput(input) {
 }
 
 /**
- * На Vercel файл в корне деплоя не доступен по HTTPS; для URL-загрузки положите картинки в `public/`.
+ * Загрузка по публичному URL в SDK — это не upload в MAX, а передача `url` во вложение.
+ * Сервер MAX при отправке сообщения сам тянет картинку по URL и часто отвечает
+ * «Failed to upload image» (сеть, Vercel, заголовки). Надёжно — только `source` с диска (token).
  */
 async function tryUploadImageFromPublicUrl(ctx, fileName) {
   const base = process.env.VERCEL_URL;
@@ -86,16 +88,16 @@ async function tryUploadImageFromFile(ctx, filePath) {
 async function uploadPhotoIfExists(ctx, fileName) {
   const { publicPath, rootPath } = resolvePaths(fileName);
 
-  // 1) Публичный URL того же деплоя — самый стабильный вариант на Vercel.
-  const fromUrl = await tryUploadImageFromPublicUrl(ctx, fileName);
-  if (fromUrl) return fromUrl;
-
-  // 2) Загрузка с диска: сначала public/, затем корень репозитория.
+  // 1) Файл с диска — реальная загрузка в MAX, в сообщении используется token (стабильно на Vercel).
   const fromPublic = await tryUploadImageFromFile(ctx, publicPath);
   if (fromPublic) return fromPublic;
 
   const fromRoot = await tryUploadImageFromFile(ctx, rootPath);
   if (fromRoot) return fromRoot;
+
+  // 2) Fallback: только если файла нет в бандле, но нужен внешний URL (редко).
+  const fromUrl = await tryUploadImageFromPublicUrl(ctx, fileName);
+  if (fromUrl) return fromUrl;
 
   if (!fs.existsSync(publicPath) && !fs.existsSync(rootPath)) {
     console.warn(`[photo-missing] нет файла: public/${fileName} или ./${fileName}`);

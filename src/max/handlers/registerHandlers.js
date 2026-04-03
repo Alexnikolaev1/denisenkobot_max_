@@ -32,7 +32,17 @@ async function handleStart(ctx) {
     console.error('[start-photo]', e);
   }
 
-  await sendHtml(ctx, MESSAGES.start(getUserName(ctx)), { attachments });
+  const text = MESSAGES.start(getUserName(ctx));
+  try {
+    await sendHtml(ctx, text, { attachments });
+  } catch (e) {
+    console.error('[start-send-with-photo]', e?.message || e);
+    if (attachments.length > 1) {
+      await sendHtml(ctx, text, { attachments: [keyboards.startInlineMenu] });
+    } else {
+      throw e;
+    }
+  }
 }
 
 /**
