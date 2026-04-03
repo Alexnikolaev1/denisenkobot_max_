@@ -68,6 +68,12 @@ const keyboards = {
   ]),
 
   contactsInlineLinks: Keyboard.inlineKeyboard([
+    [
+      Keyboard.button.link(
+        '💬 Написать в MAX',
+        'https://max.ru/send?phone=79099205590',
+      ),
+    ],
     [Keyboard.button.link('💬 Написать в Telegram', 'https://t.me/tataprophoto')],
     [Keyboard.button.link('🌐 Открыть сайт', 'https://denisenko.info/')],
   ]),
