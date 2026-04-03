@@ -35,9 +35,18 @@ async function handleStart(ctx) {
   await sendHtml(ctx, MESSAGES.start(getUserName(ctx)), { attachments });
 }
 
-function requireRegion(ctx, next) {
+/**
+ * Ответ на callback в MAX требует непустое тело: `message` или `notification`.
+ */
+async function ackCallback(ctx) {
+  return ctx.answerOnCallback({ notification: '\u200b' });
+}
+
+async function requireRegion(ctx, next) {
   if (!ctx.session?.region) {
-    return sendHtml(ctx, MESSAGES.regionRequired);
+    await ackCallback(ctx);
+    await sendHtml(ctx, MESSAGES.regionRequired);
+    return;
   }
   return next();
 }
@@ -59,11 +68,16 @@ async function sendHtml(ctx, html, extra = {}) {
 }
 
 async function handleRegion(ctx, region) {
-  await ctx.answerOnCallback();
   ctx.session.region = region.id;
   ctx.session.regionName = region.displayName;
 
-  await sendHtml(ctx, MESSAGES.regionAccepted(region.displayName), { attachments: [keyboards.mainMenu] });
+  await ctx.answerOnCallback({
+    message: {
+      text: MESSAGES.regionAccepted(region.displayName),
+      format: 'html',
+      attachments: [keyboards.mainMenu],
+    },
+  });
 }
 
 function registerHandlers(bot) {
@@ -71,8 +85,13 @@ function registerHandlers(bot) {
   bot.command('start', handleStart);
 
   bot.action('start_intro', async (ctx) => {
-    await ctx.answerOnCallback();
-    await sendHtml(ctx, MESSAGES.chooseRegion, { attachments: [keyboards.regionMenu] });
+    await ctx.answerOnCallback({
+      message: {
+        text: MESSAGES.chooseRegion,
+        format: 'html',
+        attachments: [keyboards.regionMenu],
+      },
+    });
   });
 
   bot.action(REGIONS.moscow.callbackData, (ctx) => handleRegion(ctx, REGIONS.moscow));
@@ -80,24 +99,24 @@ function registerHandlers(bot) {
   bot.action(REGIONS.zernograd.callbackData, (ctx) => handleRegion(ctx, REGIONS.zernograd));
 
   bot.action('back', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     await sendHtml(ctx, MESSAGES.mainMenuPrompt, { attachments: [keyboards.mainMenu] });
   });
 
   bot.action('services', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     await sendHtml(ctx, MESSAGES.services, { attachments: [keyboards.backMenu] });
   });
 
   bot.action('works', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     await sendHtml(ctx, MESSAGES.worksIntro);
     await sendHtml(ctx, MESSAGES.worksLinks, { attachments: [keyboards.worksInlineLinks] });
     await sendHtml(ctx, MESSAGES.mainMenuPrompt, { attachments: [keyboards.backMenu] });
   });
 
   bot.action('price', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     const isZernograd = ctx.session?.region === 'zernograd';
     await sendHtml(ctx, isZernograd ? MESSAGES.priceZernograd : MESSAGES.priceMain, {
       attachments: [keyboards.backWithContactMenu],
@@ -105,19 +124,19 @@ function registerHandlers(bot) {
   });
 
   bot.action('contact_owner', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     await sendHtml(ctx, MESSAGES.contactDirect, { attachments: [keyboards.contactsInlineLinks] });
     await sendHtml(ctx, MESSAGES.mainMenuPrompt, { attachments: [keyboards.backMenu] });
   });
 
   bot.action('contacts', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     await sendHtml(ctx, MESSAGES.contacts, { attachments: [keyboards.contactsInlineLinks] });
     await sendHtml(ctx, MESSAGES.mainMenuPrompt, { attachments: [keyboards.backMenu] });
   });
 
   bot.action('resources', requireRegion, async (ctx) => {
-    await ctx.answerOnCallback();
+    await ackCallback(ctx);
     await sendHtml(ctx, MESSAGES.resources, { attachments: [keyboards.resourcesInlineLinks] });
     await sendHtml(ctx, MESSAGES.mainMenuPrompt, { attachments: [keyboards.backMenu] });
   });
